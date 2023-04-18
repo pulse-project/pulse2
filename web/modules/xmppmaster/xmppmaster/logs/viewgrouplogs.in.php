@@ -44,7 +44,7 @@ class AjaxFilterAudit extends AjaxFilter {
       <select style="position: relative; float: left"
         class="searchfieldreal"
         name="filter-type"
-        id="filter-type" onchange="pushSearch<?php echo $this->formid ?>(); return false;" >
+        id="filter-type" >
 
         <option value="status"><?php echo _T("Deployment Status", "xmppmaster");?></option>
         <option value="infos"><?php echo _T("Machine Inventory", "xmppmaster");?></option>
@@ -52,9 +52,10 @@ class AjaxFilterAudit extends AjaxFilter {
       </select>
 
       <span class="searchfield">
-      <input type="text" class="searchfiel" name="param" id="param<?php echo $this->formid ?>" onkeyup="pushSearch<?php echo $this->formid ?>(); return false;" />
+      <input type="text" class="searchfiel" name="param" id="param<?php echo $this->formid ?>"/>
+      <button onclick="pushSearch<?php echo $this->formid ?>(); return false;"><?php echo _T("Search", "xmppmaster"); ?></button>
       <img src="graph/croix.gif" alt="suppression" style="position:relative; top : 4px;"
-      onclick="document.getElementById('param<?php echo $this->formid ?>').value =''; pushSearch<?php echo $this->formid ?>(); return false;" />
+      onclick="document.getElementById('param<?php echo $this->formid ?>').value ='';" />
       </span>
       </div>
       <br /><br /><br />
