@@ -45,6 +45,7 @@ computers listed.
 * [BUGFIX]  Add ids in the webpages (used in playwright functional tests)
 * [BUGFIX]  Fix xmlrpc int limits
 * [BUGFIX]  Fix WOL support
+* [BUGFIX]  Fix special character in creation of groups
 
 Pulse 2 4.6.9
 =============
