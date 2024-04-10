@@ -49,6 +49,7 @@ class UrApiWrapper:
         get_status(self): Get the status of the UrBackup server.
         create_backup(self, type_backup, client_id): Start a new backup operation.
     """
+
     url = ""
     user_login = ""
     password = ""
