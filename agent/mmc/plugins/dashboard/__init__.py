@@ -25,6 +25,8 @@ from mmc.plugins.dashboard.panel import (
     AgentsPanel,
     AlertsPanel,
     AlertsEntityPanel,
+    AntivirusListPanel,
+    FirewallStatusPanel,
 )
 
 VERSION = "5.2.0"
@@ -64,6 +66,8 @@ def activate():
     DM.register_panel(AgentsPanel("agents"))
     DM.register_panel(AlertsPanel("alerts"))
     DM.register_panel(AlertsEntityPanel("alertsentity"))
+    DM.register_panel(AntivirusListPanel("antivirusList"))
+    DM.register_panel(FirewallStatusPanel("firewallStatus"))
     return True
 
 

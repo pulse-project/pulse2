@@ -152,3 +152,13 @@ class AlertsEntityPanel(Panel):
     """This class is called by the Alerts Entity widget from the dashboard"""
 
     pass
+
+class AntivirusListPanel(Panel):
+    """This class is called by the Antivirus List widget from the dashboard"""
+
+    pass
+
+class FirewallStatusPanel(Panel):
+    """This class is called by the Antivirus List widget from the dashboard"""
+
+    pass

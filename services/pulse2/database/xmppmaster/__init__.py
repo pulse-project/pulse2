@@ -14650,3 +14650,402 @@ group by hostname
             .first()
         )
         return query
+    
+    @DatabaseHelper._sessionm
+    def get_antivirus_list(self, session):
+        """
+        Retrieves the list of the antiviruses names and their current status for all machines. 
+        """
+
+        # Query to get the total counts (machines and active ones)
+        sql_total = """
+            SELECT
+                COUNT(DISTINCT a.uuid) as total,
+                SUM(CASE WHEN a.active = 1 THEN 1 ELSE 0 END) as total_active
+            FROM
+                antivirus a
+            JOIN (
+                SELECT
+                    uuid,
+                    MAX(date) as max_date
+                FROM
+                    antivirus
+                GROUP BY
+                    uuid
+            ) latest ON a.uuid = latest.uuid AND a.date = latest.max_date;
+        """
+
+        result_total = session.execute(sql_total)
+        total_row = result_total.fetchone()
+
+        total = int(total_row[0]) if total_row[0] is not None else 0
+        total_active = int(total_row[1]) if total_row[1] is not None else 0
+        total_inactive = total - total_active
+
+        # Query to get the count of each antivirus name
+        sql_antivirus_counts = """
+            SELECT
+                a.name,
+                COUNT(*) as count
+            FROM
+                antivirus a
+            JOIN (
+                SELECT
+                    uuid,
+                    MAX(date) as max_date
+                FROM
+                    antivirus
+                GROUP BY
+                    uuid
+            ) latest ON a.uuid = latest.uuid AND a.date = latest.max_date
+            GROUP BY
+                a.name;
+        """
+        result_antivirus_counts = session.execute(sql_antivirus_counts)
+        antivirus_counts = {row[0]: int(row[1]) for row in result_antivirus_counts}
+
+        # Query to get only active antiviruses
+        sql_active_antivirus_counts = """
+            SELECT
+                a.name,
+                COUNT(*) as count,
+                a.last_scan
+            FROM
+                antivirus a
+            JOIN (
+                SELECT
+                    uuid,
+                    MAX(date) as max_date
+                FROM
+                    antivirus
+                GROUP BY
+                    uuid
+            ) latest ON a.uuid = latest.uuid AND a.date = latest.max_date
+            WHERE
+                a.active = 1
+            GROUP BY
+                a.name;
+        """
+
+        result_active_antivirus_counts = session.execute(sql_active_antivirus_counts).fetchall()
+        active_antivirus_counts = {row[0]: int(row[1]) for row in result_active_antivirus_counts}
+        last_scan_counts = [row[2] for row in result_active_antivirus_counts]
+
+        ret = {
+            "total": total,
+            "total_active": total_active,
+            "total_inactive": total_inactive,
+            "antivirus_counts": antivirus_counts,
+            "active_antivirus_counts": active_antivirus_counts,
+            "last_scan_counts": last_scan_counts
+        }
+
+        session.commit()
+        session.flush()
+
+        return ret
+
+    @DatabaseHelper._sessionm
+    def get_antivirus_machines(self, session, group_name, antivirus_name, last_scan):
+        """
+        Retrieves the list of the antiviruses names and their current status for all machines. 
+        """
+
+        if group_name == "enabled_antivirus":
+
+            # Query to get the uuids and hostnames of machines
+            sql_total = """
+                SELECT
+                    machines.uuid_inventorymachine,
+                    machines.hostname
+                FROM
+                    antivirus a
+                JOIN (
+                    SELECT
+                        uuid,
+                        MAX(date) as max_date
+                    FROM
+                        antivirus
+                    GROUP BY
+                        uuid
+                ) latest ON a.uuid = latest.uuid AND a.date = latest.max_date
+                JOIN
+                    machines ON a.uuid = machines.uuid_serial_machine
+                WHERE
+                    a.active = 1;
+            """
+        
+            result_total = session.execute(sql_total)
+            total_row = result_total.fetchall()
+
+        if group_name == "disabled_antivirus":
+
+            sql_total = """
+                SELECT
+                    machines.uuid_inventorymachine,
+                    machines.hostname
+                FROM
+                    antivirus a
+                JOIN (
+                    SELECT
+                        uuid,
+                        MAX(date) as max_date
+                    FROM
+                        antivirus
+                    GROUP BY
+                        uuid
+                ) latest ON a.uuid = latest.uuid AND a.date = latest.max_date
+                JOIN
+                    machines ON a.uuid = machines.uuid_serial_machine
+                WHERE
+                    a.active = 0;
+            """
+        
+            result_total = session.execute(sql_total)
+            total_row = result_total.fetchall()
+
+        if group_name == "antivirus_name":
+
+            sql_total = (
+            """
+                SELECT
+                    machines.uuid_inventorymachine,
+                    machines.hostname
+                FROM
+                    antivirus a
+                JOIN (
+                    SELECT
+                        uuid,
+                        MAX(date) as max_date
+                    FROM
+                        antivirus
+                    GROUP BY
+                        uuid
+                ) latest ON a.uuid = latest.uuid AND a.date = latest.max_date
+                JOIN
+                    machines ON a.uuid = machines.uuid_serial_machine
+                WHERE
+                    a.name = '%s';
+            """ % 
+                antivirus_name
+            )
+        
+            result_total = session.execute(sql_total)
+            total_row = result_total.fetchall()
+
+
+        if group_name == "antivirus_name_active":
+
+            sql_total = (
+            """
+                SELECT
+                    machines.uuid_inventorymachine,
+                    machines.hostname
+                FROM
+                    antivirus a
+                JOIN (
+                    SELECT
+                        uuid,
+                        MAX(date) as max_date
+                    FROM
+                        antivirus
+                    GROUP BY
+                        uuid
+                ) latest ON a.uuid = latest.uuid AND a.date = latest.max_date
+                JOIN
+                    machines ON a.uuid = machines.uuid_serial_machine
+                WHERE
+                    a.active = 1 AND a.name = '%s';
+            """ % 
+                antivirus_name
+            )
+        
+            result_total = session.execute(sql_total)
+            total_row = result_total.fetchall()
+
+        if group_name == "last_scan":
+            
+            current_time = int(time.time())
+            
+            last_scan_value_1 = None
+            last_scan_value_2 = None
+
+            if last_scan == "less than 1 day ago":
+                last_scan_value_1 = current_time - 86400  # 1 day in seconds
+                last_scan_value_2 = current_time + 1  # 1 day in seconds
+            elif last_scan == "less than 3 days ago":
+                last_scan_value_1 = current_time - 259200  # 3 days in seconds
+                last_scan_value_2 = current_time - 86400  # 1 day in seconds
+            elif last_scan == "less than 1 week ago":
+                last_scan_value_1 = current_time - 604800  # 1 week in seconds
+                last_scan_value_2 = current_time - 259200  # 3 days in seconds
+            elif last_scan == "less than 1 month ago":
+                last_scan_value_1 = current_time - 2592000  # 1 month (30 days) in seconds
+                last_scan_value_2 = current_time - 604800  # 1 week in seconds
+            elif last_scan == "more than 1 month ago":
+                last_scan_value_1 = 0  # 1 month (30 days) in seconds
+                last_scan_value_2 = current_time - 2592000  # 1 month (30 days) in seconds
+            else:
+                return {}
+
+            sql_total = """ SELECT
+                            machines.uuid_inventorymachine,
+                            machines.hostname
+                        FROM
+                            antivirus a
+                        JOIN (
+                            SELECT
+                                uuid,
+                                MAX(date) as max_date
+                            FROM
+                                antivirus
+                            GROUP BY
+                                uuid
+                        ) latest ON a.uuid = latest.uuid AND a.date = latest.max_date
+                        JOIN
+                            machines ON a.uuid = machines.uuid_serial_machine
+                        WHERE
+                            a.last_scan IS NOT NULL AND a.last_scan > %s AND a.last_scan < %s;
+                    """ % (
+                last_scan_value_1,
+                last_scan_value_2,
+            )
+        
+            result_total = session.execute(sql_total)
+            total_row = result_total.fetchall()
+
+        result = {}
+
+        for row in total_row:
+            uuid_inventorymachine = row['uuid_inventorymachine']
+            hostname = row['hostname']
+            
+            key = f"{uuid_inventorymachine}##{hostname}"
+            
+            value = {
+                "hostname": hostname,
+                "uuid": uuid_inventorymachine
+            }
+            
+            result[key] = value
+
+        return result
+
+
+    @DatabaseHelper._sessionm
+    def get_firewall_status(self, session):
+        """
+        Retrieves the list of the antiviruses names and their current status for all machines. 
+        """
+
+        # Query to get the total counts (machines and active ones)
+        sql_total = """
+            SELECT
+                COUNT(DISTINCT a.uuid) as total,
+                SUM(CASE WHEN a.firewall = 1 THEN 1 ELSE 0 END) as total_active
+            FROM
+                antivirus a
+            JOIN (
+                SELECT
+                    uuid,
+                    MAX(date) as max_date
+                FROM
+                    antivirus
+                GROUP BY
+                    uuid
+            ) latest ON a.uuid = latest.uuid AND a.date = latest.max_date;
+        """
+
+        result_total = session.execute(sql_total)
+        total_row = result_total.fetchone()
+
+        total = int(total_row[0]) if total_row[0] is not None else 0
+        total_active = int(total_row[1]) if total_row[1] is not None else 0
+        total_inactive = total - total_active
+
+        ret = {
+            "total": total,
+            "total_active": total_active,
+            "total_inactive": total_inactive
+        }
+
+        session.commit()
+        session.flush()
+
+        return ret
+
+    @DatabaseHelper._sessionm
+    def get_firewall_machines(self, session, group_name):
+        """
+        Retrieves the list of the firewall current status for all machines. 
+        """
+
+        if group_name == "enabled_firewall":
+
+            # Query to get the uuids and hostnames of machines
+            sql_total = """
+                SELECT
+                    machines.uuid_inventorymachine,
+                    machines.hostname
+                FROM
+                    antivirus a
+                JOIN (
+                    SELECT
+                        uuid,
+                        MAX(date) as max_date
+                    FROM
+                        antivirus
+                    GROUP BY
+                        uuid
+                ) latest ON a.uuid = latest.uuid AND a.date = latest.max_date
+                JOIN
+                    machines ON a.uuid = machines.uuid_serial_machine
+                WHERE
+                    a.firewall = 1;
+            """
+        
+            result_total = session.execute(sql_total)
+            total_row = result_total.fetchall()
+
+        if group_name == "disabled_firewall":
+
+            sql_total = """
+                SELECT
+                    machines.uuid_inventorymachine,
+                    machines.hostname
+                FROM
+                    antivirus a
+                JOIN (
+                    SELECT
+                        uuid,
+                        MAX(date) as max_date
+                    FROM
+                        antivirus
+                    GROUP BY
+                        uuid
+                ) latest ON a.uuid = latest.uuid AND a.date = latest.max_date
+                JOIN
+                    machines ON a.uuid = machines.uuid_serial_machine
+                WHERE
+                    a.firewall = 0;
+            """
+        
+            result_total = session.execute(sql_total)
+            total_row = result_total.fetchall()
+
+        result = {}
+
+        for row in total_row:
+            uuid_inventorymachine = row['uuid_inventorymachine']
+            hostname = row['hostname']
+            
+            key = f"{uuid_inventorymachine}##{hostname}"
+            
+            value = {
+                "hostname": hostname,
+                "uuid": uuid_inventorymachine
+            }
+            
+            result[key] = value
+
+        return result

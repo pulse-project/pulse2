@@ -1982,3 +1982,15 @@ def get_update_kb(updateid):
 
 def cancel_update(machineid, updateid):
     return XmppMasterDatabase().cancel_update(machineid, updateid)
+
+def get_antivirus_list():
+    return XmppMasterDatabase().get_antivirus_list()
+
+def get_antivirus_machines(group_name, antivirus_name, last_scan):
+    return XmppMasterDatabase().get_antivirus_machines(group_name, antivirus_name, last_scan)
+
+def get_firewall_status():
+    return XmppMasterDatabase().get_firewall_status()
+
+def get_firewall_machines(group_name):
+    return XmppMasterDatabase().get_firewall_machines(group_name)
