@@ -107,6 +107,16 @@ $page->setFile("modules/glpi/glpi/createAntivirusStaticGroup.php");
 $page->setOptions(array("visible"=>False, "noHeader"=>True));
 $submod->addPage($page);
 
+$page = new Page("createFirewallStaticGroup", _T("Create static group from firewall dashboard widget (GLPI)", "glpi"));
+$page->setFile("modules/xmppmaster/xmppmaster/createFirewallStaticGroup.php");
+$page->setOptions(array("visible"=>False, "noHeader"=>True));
+$submod->addPage($page);
+
+$page = new Page("createCheckAntivirusGroup", _T("Create static group from antivirus dashboard widget (GLPI)", "glpi"));
+$page->setFile("modules/xmppmaster/xmppmaster/createCheckAntivirusGroup.php");
+$page->setOptions(array("visible"=>False, "noHeader"=>True));
+$submod->addPage($page);
+
 $page = new Page("createOSStaticGroup", _T("Create static group from OS distribution dashboard widget (GLPI)", "glpi"));
 $page->setFile("modules/glpi/glpi/createOSStaticGroup.php");
 $page->setOptions(array("visible"=>False, "noHeader"=>True));
