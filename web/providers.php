@@ -1,4 +1,5 @@
 <?php
+
 require('phpseclib3/autoload.php');
 require_once "oidc/OpenID-Connect-PHP-master/src/OpenIDConnectClient.php";
 
@@ -9,7 +10,8 @@ session_start();
 
 use Jumbojett\OpenIDConnectClient;
 
-function parseIniSection($filePath, $section) {
+function parseIniSection($filePath, $section)
+{
     if (!is_readable($filePath)) {
         return [];
     }
@@ -26,7 +28,9 @@ function parseIniSection($filePath, $section) {
             if ($matches[1] === $section) {
                 $insideSection = true;
             } else {
-                if ($insideSection) break;
+                if ($insideSection) {
+                    break;
+                }
             }
             continue;
         }
@@ -39,7 +43,8 @@ function parseIniSection($filePath, $section) {
     return $sectionData;
 }
 
-function fetchBaseIni($section, $key) {
+function fetchBaseIni($section, $key)
+{
     $localPath = "/etc/mmc/plugins/base.ini.local";
     $iniPath = "/etc/mmc/plugins/base.ini";
 
@@ -52,16 +57,18 @@ function fetchBaseIni($section, $key) {
     return $iniData[$key] ?? null;
 }
 
-function fetchProvidersConfig(){
-        $config = parse_ini_file("/etc/mmc/authproviders.ini", true);
-        $localConfig = parse_ini_file("/etc/mmc/authproviders.ini.local", true);
-        $config = array_replace_recursive($config, $localConfig);
+function fetchProvidersConfig()
+{
+    $config = parse_ini_file("/etc/mmc/authproviders.ini", true);
+    $localConfig = parse_ini_file("/etc/mmc/authproviders.ini.local", true);
+    $config = array_replace_recursive($config, $localConfig);
 
-        return $config;
+    return $config;
 }
 
-function generateStr($length = 50) {
-    return substr(str_shuffle(str_repeat($x='0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', ceil($length/strlen($x)) )),1,$length);
+function generateStr($length = 50)
+{
+    return substr(str_shuffle(str_repeat($x = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', ceil($length / strlen($x)))), 1, $length);
 }
 
 // language management
@@ -201,4 +208,3 @@ if ($providersConfig && (isset($_POST['selectedProvider']) || isset($_GET['code'
         exit;
     }
 }
-?>
