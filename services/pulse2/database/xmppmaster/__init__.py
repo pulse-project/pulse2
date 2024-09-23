@@ -13826,7 +13826,7 @@ order by name
 
     @DatabaseHelper._sessionm
     def pending_entity_update_by_pid(
-        self, session, entity, pid="", startdate="", enddate=""
+        self, session, entity, pid="", startdate="", enddate="", interval=""
     ):
         start_date = None
         end_date = None
@@ -13880,10 +13880,11 @@ order by name
             "mesg": "Nothing to update",
         }
         if query is not None:
-            for element in query:
+            for element,_ in query:
                 element.required_deploy = 1
                 element.start_date = start_date
                 element.end_date = end_date
+                element.intervals=interval
                 session.commit()
                 session.flush()
 
@@ -13895,7 +13896,6 @@ order by name
 
             result["success"] = True
             result["mesg"] = "Update(s) %s have been requested for entity %s"%(",".join(kblist), entity)
-
 
         return result
 
