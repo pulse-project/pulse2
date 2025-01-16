@@ -487,7 +487,7 @@ cpair --foreground 4 4 ||\n";
     $ipxe .= "item --gap -- -------------------------------------
 ";
     $ipxe .= "item continue Continue Usual Startup
-item protected Password
+item protected Advanced
 choose --default continue --timeout $timeoutMs target && goto \${target}
 :MENU
 menu
