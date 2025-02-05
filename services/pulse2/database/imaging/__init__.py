@@ -5935,10 +5935,6 @@ class ImagingDatabase(DyngroupDatabaseHelper):
         elif isinstance(computer_uuid, str):
             computer_uuid = computer_uuid if computer_uuid.startswith("UUID") else "UUID%s"%computer_uuid
 
-        if not isUUID(imaging_server_uuid):
-            raise TypeError("Bad imaging server UUID: %s" % imaging_server_uuid)
-        if not isUUID(computer_uuid):
-            raise TypeError("Bad computer UUID: %s" % computer_uuid)
         session = create_session()
         session.begin()
 
